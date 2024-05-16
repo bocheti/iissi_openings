@@ -25,6 +25,7 @@ const indexOwner = async function (req, res) {
       {
         attributes: { exclude: ['userId'] },
         where: { userId: req.user.id },
+        order: [['status', 'ASC'], ['name', 'ASC']],
         include: [{
           model: RestaurantCategory,
           as: 'restaurantCategory'
@@ -95,12 +96,29 @@ const destroy = async function (req, res) {
   }
 }
 
+const toggleStatus = async function (req, res) {
+  // Only returns PUBLIC information of restaurants
+  try {
+    const restaurant = await Restaurant.findByPk(req.params.restaurantId)
+    if (restaurant.status === 'online') {
+      restaurant.status = 'offline'
+    } else {
+      restaurant.status = 'online'
+    }
+    const updatedRes = restaurant.save()
+    res.json(updatedRes)
+  } catch (err) {
+    res.status(500).send(err)
+  }
+}
+
 const RestaurantController = {
   index,
   indexOwner,
   create,
   show,
   update,
-  destroy
+  destroy,
+  toggleStatus
 }
 export default RestaurantController

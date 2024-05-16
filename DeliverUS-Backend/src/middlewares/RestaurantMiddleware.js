@@ -25,4 +25,25 @@ const restaurantHasNoOrders = async (req, res, next) => {
   }
 }
 
-export { checkRestaurantOwnership, restaurantHasNoOrders }
+const checkRestaurantToToggle = async (req, res, next) => {
+  try {
+    const restaurant = await Restaurant.findByPk(req.params.restaurantId, {
+      attributes: { exclude: ['userId'] },
+      include: [{
+        model: Order,
+        as: 'orders'
+      }]
+    })
+    if (!(restaurant.status === 'online' || restaurant.status === 'offline')) {
+      return res.status(422).send('Cannot toggle the status of a closed restaurant')
+    }
+    if (restaurant.orders.some(order => order.status === 'pending')) {
+      return res.status(422).send('Cannot toggle the status of a restaurant with pending orders')
+    }
+    return next()
+  } catch (err) {
+    return res.status(500).send(err)
+  }
+}
+
+export { checkRestaurantOwnership, restaurantHasNoOrders, checkRestaurantToToggle }

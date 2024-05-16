@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { StyleSheet, FlatList, Pressable, View } from 'react-native'
 
-import { getAll, remove } from '../../api/RestaurantEndpoints'
+import { getAll, remove, toggleStatus } from '../../api/RestaurantEndpoints'
 import ImageCard from '../../components/ImageCard'
 import TextSemiBold from '../../components/TextSemibold'
 import TextRegular from '../../components/TextRegular'
@@ -36,6 +36,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
         }}
       >
         <TextRegular numberOfLines={2}>{item.description}</TextRegular>
+        <TextSemiBold>Status: <TextSemiBold textStyle={{ color: GlobalStyles.brandPrimary }}>{item.status}</TextSemiBold></TextSemiBold>
         {item.averageServiceMinutes !== null &&
           <TextSemiBold>Avg. service time: <TextSemiBold textStyle={{ color: GlobalStyles.brandPrimary }}>{item.averageServiceMinutes} min.</TextSemiBold></TextSemiBold>
         }
@@ -77,6 +78,43 @@ export default function RestaurantsScreen ({ navigation, route }) {
             </TextRegular>
           </View>
         </Pressable>
+
+        {item.status === 'offline' && <Pressable
+            onPress={() => { toggle(item) }}
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed
+                  ? 'lime'
+                  : 'lawngreen'
+              },
+              styles.actionButton
+            ]}>
+          <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='chevron-up' color={'white'} size={20}/>
+            <TextRegular textStyle={styles.text}>
+              Set online
+            </TextRegular>
+          </View>
+        </Pressable>}
+
+        {item.status === 'online' && <Pressable
+            onPress={() => { toggle(item) }}
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed
+                  ? 'lime'
+                  : 'lawngreen'
+              },
+              styles.actionButton
+            ]}>
+          <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='chevron-down' color={'white'} size={20}/>
+            <TextRegular textStyle={styles.text}>
+              Set offline
+            </TextRegular>
+          </View>
+        </Pressable>}
+
         </View>
       </ImageCard>
     )
@@ -123,6 +161,26 @@ export default function RestaurantsScreen ({ navigation, route }) {
     } catch (error) {
       showMessage({
         message: `There was an error while retrieving restaurants. ${error} `,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    }
+  }
+
+  const toggle = async (restaurant) => {
+    try {
+      await toggleStatus(restaurant.id)
+      showMessage({
+        message: `Restaurant ${restaurant.name} succesfully set ${restaurant.status}`,
+        type: 'success',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+      navigation.navigate('RestaurantsScreen', { refresh: true })
+    } catch (error) {
+      showMessage({
+        message: `There was an error while changing status of restaurant ${restaurant.name}. ${error.message}`,
         type: 'error',
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
@@ -195,7 +253,7 @@ const styles = StyleSheet.create({
     padding: 10,
     alignSelf: 'center',
     flexDirection: 'column',
-    width: '50%'
+    width: '34%'
   },
   actionButtonsContainer: {
     flexDirection: 'row',
