@@ -40,6 +40,10 @@ const indexOwner = async function (req, res) {
 const create = async function (req, res) {
   const newRestaurant = Restaurant.build(req.body)
   newRestaurant.userId = req.user.id // usuario actualmente autenticado
+  if (!newRestaurant.status) {
+    newRestaurant.status = 'offline'
+    newRestaurant.save()
+  }
   try {
     const restaurant = await newRestaurant.save()
     res.json(restaurant)

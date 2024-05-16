@@ -19,7 +19,7 @@ export default function CreateRestaurantScreen ({ navigation }) {
   const [restaurantCategories, setRestaurantCategories] = useState([])
   const [backendErrors, setBackendErrors] = useState()
 
-  const initialRestaurantValues = { name: null, description: null, address: null, postalCode: null, url: null, shippingCosts: null, email: null, phone: null, restaurantCategoryId: null }
+  const initialRestaurantValues = { name: null, description: null, address: null, postalCode: null, url: null, shippingCosts: null, email: null, phone: null, restaurantCategoryId: null, status: null }
   const validationSchema = yup.object().shape({
     name: yup
       .string()
@@ -53,7 +53,11 @@ export default function CreateRestaurantScreen ({ navigation }) {
       .number()
       .positive()
       .integer()
-      .required('Restaurant category is required')
+      .required('Restaurant category is required'),
+    status: yup
+      .string()
+      .nullable()
+      .oneOf(['offline', 'online', 'closed', 'temporarily closed', null], 'Invalid status; must be offline, online, closed or temporarily closed (or null=offline)')
   })
 
   useEffect(() => {
@@ -160,6 +164,10 @@ export default function CreateRestaurantScreen ({ navigation }) {
               <InputItem
                 name='phone'
                 label='Phone:'
+              />
+              <InputItem
+                name='status'
+                label='Status:'
               />
 
               <DropDownPicker
